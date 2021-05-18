@@ -1,0 +1,8 @@
+{
+  "name": "eloge-cash-in",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular",
+  "id": "318ebfbd"
+}
