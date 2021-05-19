@@ -1,6 +1,9 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
-    <ion-title>Collectes</ion-title>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/collections"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Recettes</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="initActionSheet()">
         <ion-icon slot="icon-only" ios="ellipsis-horizontal" md="ellipsis-vertical"></ion-icon>
@@ -14,10 +17,10 @@
 
 <ion-content [fullscreen]="true">
   <ion-list>
-    <ion-item *ngFor="let collection of collections">
-      <ion-label>{{ collection.name }}</ion-label>
+    <ion-item *ngFor="let collectionLine of collectionsLines">
+      <ion-label>{{ collectionLine.customer.firstName }} {{ collectionLine.customer.name }}</ion-label>
       <ion-chip slot="end">
-        <ion-label>{{ collection.getTotal() }}</ion-label>
+        <ion-label>{{ collectionLine.amount }}</ion-label>
       </ion-chip>
     </ion-item>
   </ion-list>

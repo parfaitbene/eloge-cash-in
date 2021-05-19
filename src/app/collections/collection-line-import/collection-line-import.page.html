@@ -1,0 +1,28 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/tabs/collections"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Importation recettes</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list>
+    <ion-item hidden>
+      <input required #fileInput type="file" (change)="onFileSelected($event)"/>
+    </ion-item>
+    <ion-item>
+      <ion-label>{{ fileToUpload? fileToUpload.name : 'Aucun fichier' }}</ion-label>
+    </ion-item>
+  </ion-list>
+
+  <ion-button (click)="fileInput.click()" class="ion-padding" expand="full">
+    <ion-icon name="document-attach-outline"></ion-icon>
+    <ion-label class="ion-padding">Choisir</ion-label>
+  </ion-button>
+  <ion-button (click)="onSave()" class="ion-padding" expand="full" color="success" [disabled]="!fileToUpload">
+    <ion-icon name="cloud-done-outline"></ion-icon>
+    <ion-label class="ion-padding">Importer</ion-label>
+  </ion-button>
+</ion-content>

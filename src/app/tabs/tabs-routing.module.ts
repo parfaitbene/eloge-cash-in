@@ -1,5 +1,8 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { CollectionLineListPage } from '../collections/collection-line-list/collection-line-list.page';
+import { CollectionListComponent } from '../collections/collection-list/collection-list.component';
+import { CustomerListComponent } from '../customers/customer-list/customer-list.component';
 import { TabsPage } from './tabs.page';
 
 const routes: Routes = [
@@ -8,12 +11,43 @@ const routes: Routes = [
     component: TabsPage,
     children: [
       {
-        path: 'tab1',
-        loadChildren: () => import('../tab1/tab1.module').then(m => m.Tab1PageModule)
+        path: 'clients',
+        children: [
+          {
+            path: '',
+            component: CustomerListComponent
+          },
+          {
+            path: 'import',
+            loadChildren: () => import('../customers/customer-import/customer-import.module').then(m => m.CustomerImportPageModule)
+          },
+        ]
       },
       {
-        path: 'tab2',
-        loadChildren: () => import('../tab2/tab2.module').then(m => m.Tab2PageModule)
+        path: 'collections',
+        children: [
+          {
+            path: '',
+            component: CollectionListComponent
+          },
+          {
+            path: 'import',
+            loadChildren: () => import('../collections/collection-import/collection-import.module').then(m => m.CollectionImportPageModule)
+          },
+          {
+            path: 'lines',
+            children: [
+              {
+                path: '',
+                loadChildren: () => import('../collections/collection-line-list/collection-line-list.module').then(m => m.CollectionLineListPageModule),
+              },
+              {
+                path: 'import',
+                loadChildren: () => import('../collections/collection-line-import/collection-line-import.module').then(m => m.CollectionLineImportPageModule)
+              },
+            ],
+          },
+        ]
       },
       {
         path: 'tab3',
@@ -21,14 +55,14 @@ const routes: Routes = [
       },
       {
         path: '',
-        redirectTo: '/tabs/tab1',
+        redirectTo: '/tabs/collections',
         pathMatch: 'full'
       }
     ]
   },
   {
     path: '',
-    redirectTo: '/tabs/tab1',
+    redirectTo: '/tabs/collections',
     pathMatch: 'full'
   }
 ];
