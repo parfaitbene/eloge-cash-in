@@ -7,11 +7,17 @@ export class Collection {
     date: Date;
     lines: CollectionLine[] = [];
 
-    constructor(name: string){
-        // this.id = uuidv4();
+    constructor(name: string, lines: CollectionLine[] = [], date: Date = new Date()){
         this.name = name;
-        // this.date = new Date();
-        // this.lines = [];
+        this.lines = lines;
+        this.date = date;
+    }
+
+    create() {
+        this.id = uuidv4();
+        this.date = new Date();
+
+        return this;
     }
 
     getTotal(){

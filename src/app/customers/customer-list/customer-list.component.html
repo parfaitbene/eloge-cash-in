@@ -1,7 +1,13 @@
-<ion-header [translucent]="true">
+<ion-header>
   <ion-toolbar>
-    <ion-title>Clients</ion-title>
-    <ion-buttons slot="end">
+    <ion-buttons slot="start" *ngIf="willAddLine">
+      <ion-button (click)="onCancel()">
+        <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title *ngIf="!willAddLine">Clients</ion-title>
+    <ion-title *ngIf="willAddLine">Choisir un client</ion-title>
+    <ion-buttons slot="end" *ngIf="!willAddLine">
       <ion-button (click)="initActionSheet()">
         <ion-icon slot="icon-only" ios="ellipsis-horizontal" md="ellipsis-vertical"></ion-icon>
       </ion-button>
@@ -12,15 +18,15 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-list>
-    <ion-item *ngFor="let customer of customers">
-      <ion-label>{{ customer.firstName }} {{ customer.name }}</ion-label>
+<ion-content>
+  <ion-list id='customers'>
+    <ion-item *ngFor="let customer of customers" (click)="onChoice(customer)">
+      {{ customer.firstName }} {{ customer.name }}
     </ion-item>
   </ion-list>
   
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button color="primary">
+    <ion-fab-button color="primary" (click)="onAddCustomerModal()">
       <ion-icon name="add-outline"></ion-icon>
     </ion-fab-button>
   </ion-fab>

@@ -1,10 +1,11 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ActivatedRoute, NavigationExtras } from '@angular/router';
-import { ActionSheetController, NavController, NavParams } from '@ionic/angular';
-import { Subscription } from 'rxjs';
+import { Component, OnDestroy } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { ActionSheetController, AlertController, ModalController, NavController, NavParams } from '@ionic/angular';
+import { Subject, Subscription } from 'rxjs';
+import { CustomerListComponent } from 'src/app/customers/customer-list/customer-list.component';
 import { CollectionLine } from 'src/app/models/collection-line.model';
 import { Collection } from 'src/app/models/collection.model';
-import { CollectionService } from 'src/app/services/collection.service.';
+import { CollectionService } from 'src/app/services/collection.service';
 import * as XLSX from 'xlsx';
 
 @Component({
@@ -13,54 +14,59 @@ import * as XLSX from 'xlsx';
   styleUrls: ['./collection-line-list.page.scss'],
   providers: [NavParams]
 })
-export class CollectionLineListPage implements OnInit, OnDestroy {
+export class CollectionLineListPage implements OnDestroy{
   collection: Collection = null;
   collections: Collection[] = [];
-  collectionsLines: CollectionLine[] = [];
-  collectionsLinesSubscription: Subscription;
-  collectionsSubscription: Subscription;
+  // collectionsLines: CollectionLine[] = [];
+  collectionSubject = new Subject<Collection>();
+  collectionSubscription: Subscription;
 
   constructor(
       private collectionService: CollectionService,
       public actionSheetController: ActionSheetController,
-      private navController: NavController,
       public navParams: NavParams,
-      private route: ActivatedRoute
+      private route: ActivatedRoute,
+      public modalController: ModalController,
+      public navController: NavController,
+      public alertController: AlertController
     ) {}
-
-  ngOnInit() {
-    this.collectionsLinesSubscription = this.collectionService.collectionsLinesSubject.subscribe(
-      (collectionsLines: CollectionLine[]) => { 
-        this.collectionsLines = collectionsLines.sort(); 
-        console.log(this.collectionsLines);
-      }
-    );
-    this.collectionService.emitCollectionsLinesList();
-
-    this.collectionsSubscription = this.collectionService.collectionsSubject.subscribe(
-      (collections: Collection[]) => { 
-        this.collections = collections.sort(); 
-      }
-    );
-    this.collectionService.emitCollectionsList();
-
-    this.initLiveSearch();
-  }
 
   ionViewWillEnter() {
     this.route.queryParams.subscribe(params => {
-      this.collection = this.collectionService.getCollectionByName(params['collection_name']);
-      this.collection = this.collection? this.collection : new Collection(params['collection_name']);
+      this.collection = this.collectionService.getCollectionById(params['collection_id']);
+
+      if(this.collection){
+        this.collectionService.getCollectionLines(this.collection).then(
+          (lines: CollectionLine[]) => {
+            // this.collection.lines = lines;
+            this.collection.lines = lines;
+            this.collectionSubject.next(this.collection);
+          });
+      }
+      else{
+        this.navController.navigateForward(['/tabs', 'collections']);
+      }
     });
+  }
+
+  ionViewDidEnter() {
+    this.collectionSubscription = this.collectionSubject.subscribe(
+      (collection: Collection) => { this.collection = collection; }
+    );
+    this.collectionSubject.next(this.collection);
+    
+    this.initLiveSearch();
   }
 
   initLiveSearch(){
     const searchbar = document.querySelector('ion-searchbar');
-    searchbar.addEventListener('ionInput', this.handleInput);
+    try{
+      searchbar.addEventListener('ionInput', this.handleInput);
+    }catch(e){}
   }
 
   handleInput(event) {
-    const items: any = Array.from(document.querySelector('ion-list').children);
+    const items: any = Array.from(document.querySelector('ion-list#coll-lines').children);
     const query = event.target.value.toLowerCase();
 
     requestAnimationFrame(() => {
@@ -71,23 +77,36 @@ export class CollectionLineListPage implements OnInit, OnDestroy {
     });
   }
 
+  async onAddLineModal() {
+    const modal = await this.modalController.create({
+      component: CustomerListComponent,
+      componentProps: {
+        'collection': this.collection,
+        'willAddLine': true
+      }
+    });
+
+    return await modal.present();
+  }
+
   onExport(){
     const wb = XLSX.utils.book_new();
     let today = new Date();
-    const wsname: string = 'Recettes-'+today.getFullYear().toString()+'-'+today.getMonth().toString()+'-'+today.getDate().toString();
-    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(this.getExportLines());
+    const suffix: string = '-'+today.getFullYear().toString()+'-'+today.getMonth().toString()+'-'+today.getDate().toString();
+    const wsname: string = 'Recettes-' + this.collection.name.trim() + suffix;
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet(this.formatExportLines());
     XLSX.utils.book_append_sheet(wb, ws, wsname);
     XLSX.writeFile(wb, wsname+'.xlsx');
   }
 
-  getExportLines() {
+  formatExportLines() {
     let rows: any[] = [];
 
-    this.collectionsLines.forEach(line => {
+    this.collection.lines.forEach(line => {
       const row: any = {
         'prenom': line.customer.firstName,
         'nom': line.customer.name,
-        'compte': line.customer.accountNumber,
+        'matricule': line.customer.accountNumber,
         'montant': line.amount,
         'date': line.date
       };
@@ -101,28 +120,43 @@ export class CollectionLineListPage implements OnInit, OnDestroy {
   async initActionSheet() {
     const actionSheet = await this.actionSheetController.create({
       header: 'Actions',
-      buttons: [{
-        text: 'Vider',
-        role: 'destructive',
-        icon: 'trash',
-        handler: () => {
-          this.collectionService.setCollectionsLines([]);
-        }
-      }, {
-
-        text: 'Importer',
-        icon: 'cloud-upload',
-        handler: () => {
-          let params: NavigationExtras = {queryParams: {'collection_name': this.collection.name}};
-          this.navController.navigateForward(['tabs', 'collections', 'lines', 'import'], params);
-        }
-      }, {
+      buttons: [
+      {
         text: 'Exporter',
         icon: 'cloud-download',
         handler: () => {
           this.onExport()
         }
-      }, {
+      }, 
+      {
+        text: 'Vider',
+        role: 'destructive',
+        icon: 'trash',
+        handler: async () => {
+          const alert = await this.alertController.create({
+            header: 'Suppression recettes',
+            subHeader: 'Voulez-vous vraiment supprimer toutes les recettes enregistrées pour '+ this.collection.name +'?',
+            buttons: [
+              {
+                text: 'Non',
+                role: 'cancel',
+              }, 
+              {
+                text: 'Oui',
+                handler: async () => {
+                  await this.collectionService.deleteCollectionLines(this.collection).then(
+                    (c: Collection) => { 
+                      this.collectionSubject.next(c);
+                    }
+                  );
+                }
+              }
+            ]
+          });
+          await alert.present();
+        }
+      }, 
+      {
         text: 'Cancel',
         icon: 'close',
         role: 'cancel',
@@ -132,7 +166,6 @@ export class CollectionLineListPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.collectionsLinesSubscription.unsubscribe();
-    this.collectionsSubscription.unsubscribe();
+    this.collectionSubscription.unsubscribe();
   }
 }

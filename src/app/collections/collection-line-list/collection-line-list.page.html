@@ -3,7 +3,7 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/tabs/collections"></ion-back-button>
     </ion-buttons>
-    <ion-title>Recettes</ion-title>
+    <ion-title>Recettes {{ collection? ("("+ collection.name +")") : "" }}</ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="initActionSheet()">
         <ion-icon slot="icon-only" ios="ellipsis-horizontal" md="ellipsis-vertical"></ion-icon>
@@ -16,17 +16,17 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-list>
-    <ion-item *ngFor="let collectionLine of collectionsLines">
-      <ion-label>{{ collectionLine.customer.firstName }} {{ collectionLine.customer.name }}</ion-label>
+  <ion-list id="coll-lines" *ngIf="collection">
+    <ion-item *ngFor="let collectionLine of collection.lines">
+      {{ collectionLine.customer.firstName }} {{ collectionLine.customer.name }}
       <ion-chip slot="end">
-        <ion-label>{{ collectionLine.amount }}</ion-label>
+        {{ collectionLine.amount }}
       </ion-chip>
     </ion-item>
   </ion-list>
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button color="primary">
+    <ion-fab-button color="primary" (click)="onAddLineModal()">
       <ion-icon name="add-outline"></ion-icon>
     </ion-fab-button>
   </ion-fab>

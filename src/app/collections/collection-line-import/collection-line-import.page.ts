@@ -5,7 +5,7 @@ import { Subscription } from 'rxjs';
 import { CollectionLine } from 'src/app/models/collection-line.model';
 import { Collection } from 'src/app/models/collection.model';
 import { Customer } from 'src/app/models/customer.model';
-import { CollectionService } from 'src/app/services/collection.service.';
+import { CollectionService } from 'src/app/services/collection.service';
 import { CustomerService } from 'src/app/services/customer.service';
 import * as XLSX from 'xlsx';
 
@@ -50,7 +50,7 @@ export class CollectionLineImportPage implements OnInit {
 
   ionViewWillEnter() {
     this.route.queryParams.subscribe(params => {
-      this.collection = this.collectionService.getCollectionByName(params['collection_name']);
+      this.collection = this.collectionService.getCollectionById(params['collection_id']);
     });
   }
 
@@ -86,7 +86,7 @@ export class CollectionLineImportPage implements OnInit {
 
   parseDatas(datas: any[]) {
     if(!this.customers.length){ this.createCustomers(datas); }
-    let collection: Collection = this.collectionService.getCollectionByName(this.navParams.get('collection_name'));
+    let collection: Collection = this.collectionService.getCollectionById(this.navParams.get('collection_id'));
     collection = collection? collection : this.createCollection();
 
     datas.forEach(row => {

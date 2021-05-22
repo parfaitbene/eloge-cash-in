@@ -1,10 +1,9 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { NavigationExtras } from '@angular/router';
-import { ActionSheetController, NavController, NavParams } from '@ionic/angular';
+import { ActionSheetController, AlertController, NavController, NavParams } from '@ionic/angular';
 import { Subscription } from 'rxjs';
 import { Collection } from 'src/app/models/collection.model';
-import { Customer } from 'src/app/models/customer.model';
-import { CollectionService } from 'src/app/services/collection.service.';
+import { CollectionService } from 'src/app/services/collection.service';
 import * as XLSX from 'xlsx';
 
 @Component({
@@ -20,7 +19,8 @@ export class CollectionListComponent implements OnInit, OnDestroy {
   constructor(
       private collectionService: CollectionService,
       public actionSheetController: ActionSheetController,
-      private navController: NavController
+      private navController: NavController,
+      public alertController: AlertController
     ) {}
 
   ngOnInit() {
@@ -30,12 +30,14 @@ export class CollectionListComponent implements OnInit, OnDestroy {
       }
     );
     this.collectionService.emitCollectionsList();
-
+  }
+  
+  ionViewDidEnter() {
     this.initLiveSearch();
   }
 
-  onDisplay(name: string) {
-    let params: NavigationExtras = {queryParams: {'collection_name': name}};
+  onDisplay(id: string) {
+    let params: NavigationExtras = {queryParams: {'collection_id': id}};
     this.navController.navigateForward(['/tabs', 'collections', 'lines'], params);
   }
 
@@ -45,7 +47,7 @@ export class CollectionListComponent implements OnInit, OnDestroy {
   }
 
   handleInput(event) {
-    const items: any = Array.from(document.querySelector('ion-list').children);
+    const items: any = Array.from(document.querySelector('ion-list#collections').children);
     const query = event.target.value.toLowerCase();
 
     requestAnimationFrame(() => {
@@ -54,6 +56,39 @@ export class CollectionListComponent implements OnInit, OnDestroy {
         item.style.display = shouldShow ? 'block' : 'none';
       });
     });
+  }
+
+  async onNew() {
+    const alert = await this.alertController.create({
+      header: 'Titre',
+      subHeader: 'Débuter une nouvelle collecte',
+      inputs: [
+          {
+            name: 'name',
+            type: 'text',
+            placeholder: 'Ex: Collecte de Lundi'
+          },
+        ],
+      buttons: [
+        {
+          text: 'Annuler',
+          role: 'cancel',
+        }, 
+        {
+          text: 'Enregistrer',
+          handler: () => {
+            alert.dismiss();
+            alert.onDidDismiss().then(
+              (datas: any) => {
+                if(datas.data.values['name'])
+                  this.collectionService.createCollection(new Collection(datas.data.values['name']))
+            });
+          }
+        }
+      ]
+    });
+  
+    await alert.present();
   }
 
   onExport(){
@@ -70,26 +105,27 @@ export class CollectionListComponent implements OnInit, OnDestroy {
       header: 'Actions',
       buttons: [
       {
-        text: 'Recettes',
-        icon: 'cash',
-        handler: () => {
-          this.navController.navigateForward(['tabs','collections', 'lines']);
-        }
-      }, 
-      {
         text: 'Vider',
         role: 'destructive',
         icon: 'trash',
-        handler: () => {
-          this.collectionService.setCollections([]);
-        }
-      }, 
-      {
-
-        text: 'Importer',
-        icon: 'cloud-upload',
-        handler: () => {
-          this.navController.navigateForward(['tabs', 'collections', 'import']);
+        handler: async () => {
+          const alert = await this.alertController.create({
+            header: 'Suppression collectes',
+            subHeader: 'Voulez-vous vraiment supprimer toutes les collectes? Cette action supprimera également toutes les recettes enregistrées jusqu\ici.',
+            buttons: [
+              {
+                text: 'Non',
+                role: 'cancel',
+              }, 
+              {
+                text: 'Oui',
+                handler: () => {
+                  this.collectionService.deleteAllCollections();
+                }
+              }
+            ]
+          });
+          await alert.present();
         }
       }, 
       // {
@@ -103,7 +139,8 @@ export class CollectionListComponent implements OnInit, OnDestroy {
         text: 'Cancel',
         icon: 'close',
         role: 'cancel',
-      }]
+      }
+    ]
     });
     await actionSheet.present();
   }

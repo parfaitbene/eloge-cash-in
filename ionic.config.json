@@ -1,7 +1,10 @@
 {
-  "name": "eloge-cash-in",
+  "name": "Eloge Cash In",
   "integrations": {
-    "capacitor": {}
+    "capacitor": {},
+    "cordova": {
+      "enabled": false
+    }
   },
   "type": "angular",
   "id": "318ebfbd"

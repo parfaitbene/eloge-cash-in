@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { NavController } from '@ionic/angular';
 import { Collection } from 'src/app/models/collection.model';
-import { CollectionService } from 'src/app/services/collection.service.';
+import { CollectionService } from 'src/app/services/collection.service';
 import * as XLSX from 'xlsx';
 
 @Component({

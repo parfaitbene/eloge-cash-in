@@ -1,6 +1,6 @@
 {
-  "appId": "io.ionic.starter",
-  "appName": "eloge-cash-in",
+  "appId": "biz.iccsoft.elogecashin",
+  "appName": "Eloge Cash In",
   "bundledWebRuntime": false,
   "npmClient": "npm",
   "webDir": "www",

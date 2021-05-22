@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { NavController } from '@ionic/angular';
+import { Subscription } from 'rxjs';
 import { Customer } from 'src/app/models/customer.model';
 import { CustomerService } from 'src/app/services/customer.service';
 import * as XLSX from 'xlsx';
@@ -9,14 +10,22 @@ import * as XLSX from 'xlsx';
   templateUrl: './customer-import.page.html',
   styleUrls: ['./customer-import.page.scss'],
 })
-export class CustomerImportPage implements OnInit {
+export class CustomerImportPage implements OnInit, OnDestroy {
   fileToUpload: any;
   customers: Customer[] = [];
   count: number = 0;
+  customersSubscription: Subscription;
+  datas: any[];
 
   constructor(private customerService: CustomerService, private navCtrl: NavController) { }
 
   ngOnInit() {
+    this.customersSubscription = this.customerService.customersSubject.subscribe(
+      (customers: Customer[]) => { 
+        this.customers = customers.sort(); 
+      }
+    );
+    this.customerService.emitCustomersList();
   }
 
   onFileSelected(event) {
@@ -41,24 +50,30 @@ export class CustomerImportPage implements OnInit {
       const ws: XLSX.WorkSheet = wb.Sheets[wsname];
 
       /* save data */
-      let datas: any[] = (XLSX.utils.sheet_to_json(ws));
-      this.count = datas.length;
-      this.parseDatas(datas)
+      this.datas = (XLSX.utils.sheet_to_json(ws));
+      this.count = this.datas.length;
     };
     reader.readAsBinaryString(target.files[0]);
   }
 
   parseDatas(datas: any[]) {
     datas.forEach(row => {
-      let customer = new Customer(row.prenom, row.nom, row.compte);
+      let customer = new Customer(row.prenom, row.nom, row.matricule);
       customer.phone = row.phone;
       customer.email = row.email;
-      this.customers.push(customer);
+      
+      this.customerService.updateOrCreate(customer);
     });
+
   }
 
   onSave(){
+    this.parseDatas(this.datas);
     this.customerService.setCustomers(this.customers);
     this.navCtrl.navigateRoot('/tabs/clients');
+  }
+  
+  ngOnDestroy() {
+    this.customersSubscription.unsubscribe();
   }
 }

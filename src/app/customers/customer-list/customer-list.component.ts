@@ -1,9 +1,12 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ActionSheetController, NavController } from '@ionic/angular';
+import { Component, OnInit, OnDestroy, Input } from '@angular/core';
+import { ActionSheetController, ModalController, NavController } from '@ionic/angular';
 import { Subscription } from 'rxjs';
+import { CollectionLineCreateComponent } from 'src/app/collections/collection-line-create/collection-line-create.component';
 import { Customer } from 'src/app/models/customer.model';
 import { CustomerService } from 'src/app/services/customer.service';
+import { ModalService } from 'src/app/services/modal-service';
 import * as XLSX from 'xlsx';
+import { CustomerCreateComponent } from '../customer-create/customer-create.component';
 
 @Component({
   selector: 'app-customer-list',
@@ -11,16 +14,22 @@ import * as XLSX from 'xlsx';
   styleUrls: ['./customer-list.component.scss'],
 })
 export class CustomerListComponent implements OnInit, OnDestroy {
+  @Input() willAddLine: boolean = false;
+  @Input() collection;
+  choice: Customer;
+  newCustomer: Customer;
   customers: Customer[] = [];
   customersSubscription: Subscription;
 
   constructor(
       private customerService: CustomerService,
       public actionSheetController: ActionSheetController,
-      private navController: NavController
+      private navController: NavController,
+      public modalController: ModalController,
+      public modalService: ModalService
     ) {}
 
-  ngOnInit() {
+  async ngOnInit() {
     this.customersSubscription = this.customerService.customersSubject.subscribe(
       (customers: Customer[]) => { 
         this.customers = customers.sort(); 
@@ -28,16 +37,47 @@ export class CustomerListComponent implements OnInit, OnDestroy {
     );
     this.customerService.emitCustomersList();
 
-    this.initLiveSearch();
+    await this.initLiveSearch();
   }
 
-  initLiveSearch(){
+  onAddCustomerModal() {
+    let options = {
+      component: CustomerCreateComponent,
+      componentProps: {
+        'customer': this.newCustomer
+      }
+    };
+
+    this.modalService.presentModal(options);
+  }
+
+  async onChoice(customer: Customer) {
+    this.choice = customer;
+
+    if(this.willAddLine) {
+      const modal = await this.modalController.create({
+        component: CollectionLineCreateComponent,
+        componentProps: {
+          'collection': this.collection,
+          'customer': this.choice
+        }
+      });
+      
+      return await modal.present();
+    }
+    else {
+      //afficher les détails
+    }
+
+  }
+
+  async initLiveSearch(){
     const searchbar = document.querySelector('ion-searchbar');
     searchbar.addEventListener('ionInput', this.handleInput);
   }
 
   handleInput(event) {
-    const items: any = Array.from(document.querySelector('ion-list').children);
+    const items: any = Array.from(document.querySelector('ion-list#customers').children);
     const query = event.target.value.toLowerCase();
 
     requestAnimationFrame(() => {
@@ -86,6 +126,11 @@ export class CustomerListComponent implements OnInit, OnDestroy {
       }]
     });
     await actionSheet.present();
+  }
+
+  onCancel() {
+    this.modalController.dismiss();
+    this.willAddLine = false;
   }
 
   ngOnDestroy() {

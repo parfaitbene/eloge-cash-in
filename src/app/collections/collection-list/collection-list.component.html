@@ -13,8 +13,8 @@
 </ion-header>
 
 <ion-content [fullscreen]="true">
-  <ion-list>
-    <ion-item *ngFor="let collection of collections" (click)="onDisplay(collection.name)">
+  <ion-list id="collections">
+    <ion-item *ngFor="let collection of collections" (click)="onDisplay(collection.id)">
       <ion-label>{{ collection.name }}</ion-label>
       <ion-chip slot="end">
         <ion-label>{{ collection.getTotal() }}</ion-label>
@@ -23,7 +23,7 @@
   </ion-list>
 
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-    <ion-fab-button color="primary">
+    <ion-fab-button color="primary" (click)="onNew()">
       <ion-icon name="add-outline"></ion-icon>
     </ion-fab-button>
   </ion-fab>
