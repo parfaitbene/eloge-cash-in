@@ -10,12 +10,24 @@ import { DatabaseService } from './services/database.service';
 })
 export class AppComponent {
   constructor(private databaseService:DatabaseService,private collectionService:CollectionService) {
-    console.log("IN APPCOMPONENT")
-    if(this.databaseService.init()){
-      var result:any = this.databaseService.getCollectionList();
-      console.log("IN COMPONENT IF",result);
-      this.collectionService.setCollections(result.value);
-    }
+    console.log("IN APPCOMPONENT");
+    let test = this.databaseService.init();
+    
+    // this.databaseService.init().then(
+    //   (test: boolean) => {
+    //     if(test){
+    //       // var result:any = this.databaseService.getCollectionList();
+    //       this.databaseService.getCollectionList().subscribe(
+    //         (res) => {
+    //           console.log("IN COMPONENT IF",res.values);
+    //           console.log("I+++++++++++ ",res.values.length);
+    //           this.collectionService.setCollections(res.values);
+
+    //         }
+    //       );
+    //     }
+    //   }
+    // );
 
   }
 

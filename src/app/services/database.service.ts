@@ -19,11 +19,13 @@ var isReady:Boolean = false;
   providedIn: 'root'
 })
 export class DatabaseService {
-  dbReady = new BehaviorSubject(false);
-  dbName = '';
+  private dbReady = new BehaviorSubject(false);
+  private dbName = '';
 
   constructor(private alertCtrl: AlertController) { }
 
+  getDBName() { return this.dbName; }
+  
   async init(): Promise<Boolean> {
     const info = await Device.getInfo();
     console.log("IN APPCOMPONENT INIT",info.platform);
@@ -63,6 +65,13 @@ export class DatabaseService {
       await CapacitorSQLite.open({ database: this.dbName });
       this.dbReady.next(true);
 
+      const dbExist = CapacitorSQLite.isDBExists({database: this.dbName});
+      dbExist.then(
+        (result) => {
+          console.log('***************************22'+result.result);
+        }
+      );
+
       isReady = true;
       return isReady;
 
@@ -80,6 +89,7 @@ export class DatabaseService {
       const isValid = await CapacitorSQLite.isJsonValid({jsonstring});
       console.log("IN APPCOMPONENT Download json",isValid);
       console.log("IN APPCOMPONENT Download json result",isValid.result);
+
 
       if (isValid.result) {
         console.log("IN APPCOMPONENT Download if");
@@ -102,7 +112,7 @@ export class DatabaseService {
           return of({ values: [] });
         } else {
           const statement = 'SELECT * FROM collection;';
-          return from(CapacitorSQLite.query({ statement, values: [] }));
+          return from(CapacitorSQLite.query({database: this.dbName, statement, values: [] }));
         }
       })
     )

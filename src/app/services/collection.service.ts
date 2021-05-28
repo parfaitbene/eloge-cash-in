@@ -5,6 +5,7 @@ import {v4 as uuidv4} from 'uuid';
 import { Plugins } from '@capacitor/core';
 
 import { Injectable } from "@angular/core";
+import { DatabaseService } from "./database.service";
 const { CapacitorSQLite} = Plugins;
 
 
@@ -17,7 +18,8 @@ export class CollectionService {
     collectionsSubject = new Subject<Collection[]>();
     collectionsLinesSubject = new Subject<CollectionLine[]>();
 
-    constructor(){
+    constructor(public databaseService: DatabaseService){
+       this.loadCollectionList();
     }
 
     emitCollectionsList(){
@@ -50,11 +52,25 @@ export class CollectionService {
         return collection;
     }
 
+    loadCollectionList() {
+        this.databaseService.getCollectionList().subscribe(
+            res => { 
+                res.values.forEach(c => {
+                    let collection = new Collection(c.name, [], c.date);
+                    collection.id = c.id;
+                    this.collections.push(collection);
+                    this.emitCollectionsList();
+                });
+            }
+        );
+    }
+
     persistCollections(collection:Collection,email:String) {
         // Complete persist code here
         console.log("IN PERSIST COLLECTION",collection.name);
-        const statement = `INSERT INTO collection (id_collection, name, date, email_user) VALUES (${collection.id},${collection.name}, ${collection.date}, ${email});`;
-        CapacitorSQLite.execute({ statements: statement });
+        const statement = `INSERT INTO collection (id_collection, name, date) VALUES ('${collection.id}','${collection.name}', '${collection.date}');`;
+        CapacitorSQLite.execute({database: this.databaseService.getDBName() , statements: statement });
+        console.log('Insertion.......');
 
         this.emitCollectionsList();
     }
@@ -156,7 +172,7 @@ export class CollectionService {
             (resolve, reject) => {
                 newCollection.id = uuidv4();
                 console.log("IN COLLECTION TAB",this.collections);
-                this.collections.push(newCollection);
+                // this.collections.push(newCollection);
                 this.persistCollections(newCollection,"tch@gmail.com");
                 resolve(newCollection);
             }
