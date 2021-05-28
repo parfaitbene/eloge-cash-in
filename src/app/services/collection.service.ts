@@ -2,7 +2,15 @@ import { Subject } from "rxjs";
 import { CollectionLine } from "../models/collection-line.model";
 import { Collection } from "../models/collection.model";
 import {v4 as uuidv4} from 'uuid';
+import { Plugins } from '@capacitor/core';
 
+import { Injectable } from "@angular/core";
+const { CapacitorSQLite} = Plugins;
+
+
+@Injectable({
+  providedIn: 'root'
+})
 export class CollectionService {
     private collections: Collection[] = [];
     private collectionsLines: CollectionLine[] = [];
@@ -16,7 +24,7 @@ export class CollectionService {
         this.collectionsSubject.next(this.collections);
         this.collectionsLinesSubject.next(this.collectionsLines);
     }
-    
+
     emitCollectionsLinesList(){
         this.collectionsLinesSubject.next(this.collectionsLines);
         this.collectionsSubject.next(this.collections);
@@ -42,8 +50,12 @@ export class CollectionService {
         return collection;
     }
 
-    persistCollections() {
+    persistCollections(collection:Collection,email:String) {
         // Complete persist code here
+        console.log("IN PERSIST COLLECTION",collection.name);
+        const statement = `INSERT INTO collection (id_collection, name, date, email_user) VALUES (${collection.id},${collection.name}, ${collection.date}, ${email});`;
+        CapacitorSQLite.execute({ statements: statement });
+
         this.emitCollectionsList();
     }
 
@@ -60,7 +72,7 @@ export class CollectionService {
                         (c, index) => {
                             if(c.id == collection.id){
                                 this.collections.splice(index, 1);
-                                this.persistCollections();
+                                //this.persistCollections();
                                 this.deleteCollectionLines(collection);
                             }
                         }
@@ -85,21 +97,21 @@ export class CollectionService {
                                         if(l.id == line.id){
                                             this.collectionsLines.splice(line_index, 1);
                                             this.persistCollectionsLines();
-        
+
                                             return l.id == line.id;
                                         }
                                     }
                                 );
                             });
-        
+
                             collection.lines = [];
                             this.collections[collection_index] = collection;
-                            this.persistCollections();
+                            //this.persistCollections();
                         }
                         return c.id == collection.id;
                     }
                 );
-        
+
                 resolve(updateCollection);
             }
         );
@@ -107,7 +119,7 @@ export class CollectionService {
 
     deleteAllCollections() {
         this.setCollections([]);
-        this.persistCollections();
+        //this.persistCollections();
         this.deleteAllCollectionsLines();
     }
 
@@ -122,11 +134,11 @@ export class CollectionService {
                 try{
                     if(collection && collection.id){
                         let lines = [];
-        
+
                         this.collectionsLines.forEach(line => {
                             if(line.collection.id == collection.id) { lines.push(line); }
                         });
-    
+
                         resolve(lines);
                     }
                 }
@@ -138,11 +150,14 @@ export class CollectionService {
     }
 
     createCollection(newCollection: Collection) {
+      console.log("IN COLLECTION CREATE",newCollection.name);
+      console.log("IN COLLECTION CREATE",newCollection.date);
         return new Promise(
             (resolve, reject) => {
                 newCollection.id = uuidv4();
+                console.log("IN COLLECTION TAB",this.collections);
                 this.collections.push(newCollection);
-                this.persistCollections();
+                this.persistCollections(newCollection,"tch@gmail.com");
                 resolve(newCollection);
             }
         );
@@ -155,8 +170,8 @@ export class CollectionService {
                 this.collectionsLines.push(newCollectionLine);
                 this.persistCollectionsLines();
                 newCollectionLine.collection.lines.push(newCollectionLine);
-                this.persistCollections();
-                
+                //this.persistCollections();
+
                 resolve(newCollectionLine);
             }
         );

@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { Collection } from '../models/collection.model';
-import { CollectionService } from '../services/collection.service.';
+import { CollectionService } from '../services/collection.service';
 import { popoverController } from '@ionic/core';
 import { ActionSheetController } from '@ionic/angular';
 
@@ -23,12 +23,12 @@ export class Tab2Page implements OnInit, OnDestroy {
 
   ngOnInit(){
     this.collectionsSubscription = this.collectionService.collectionsSubject.subscribe(
-      (collections: Collection[]) => { 
-        this.collections = collections; 
+      (collections: Collection[]) => {
+        this.collections = collections;
       }
     );
     this.collectionService.emitCollectionsList();
-      
+
     this.initLiveSearch();
   }
 
@@ -113,9 +113,9 @@ export class Tab2Page implements OnInit, OnDestroy {
         `;
       }
     });
-    
+
   }
-  
+
 
   ngOnDestroy(){
     this.collectionsSubscription.unsubscribe();

@@ -9,6 +9,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { CollectionService } from './services/collection.service';
 import { CustomerService } from './services/customer.service';
+import { DatabaseService } from './services/database.service';
 import { ModalService } from './services/modal-service';
 import { UserService } from './services/user.service';
 
@@ -23,6 +24,7 @@ import { UserService } from './services/user.service';
     CollectionService,
     CustomerService,
     ModalService,
+    DatabaseService,
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy }
   ],
   bootstrap: [AppComponent],
