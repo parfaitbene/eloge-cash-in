@@ -5,7 +5,12 @@
         <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title>Enregistrer une recette</ion-title>
+    <ion-title>{{isUpdate?"Modifier une recette":"Enregistrer une recette"}}</ion-title>
+    <ion-buttons slot="end" *ngIf="isUpdate">
+      <ion-button (click)="onDelete()">
+        <ion-icon name="trash"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -46,8 +51,8 @@
         <ion-input formControlName="amount" type="number"></ion-input>
       </ion-item>
       <ion-item>
-        <ion-label position="floating">Date</ion-label>
-        <ion-datetime formControlName="date" displayFormat="YYYY-MM-DD"></ion-datetime>
+        <ion-label >Date: {{collection.date}}</ion-label>
+        <!-- <ion-datetime formControlName="date" displayFormat="YYYY-MM-DD"></ion-datetime> -->
       </ion-item>
       <ion-button type="submit" class="ion-padding" expand="full" color="success" [disabled]="myForm.invalid">
         <ion-icon name="save-outline"></ion-icon>

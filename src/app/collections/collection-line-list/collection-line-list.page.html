@@ -5,6 +5,9 @@
     </ion-buttons>
     <ion-title>Recettes {{ collection? ("("+ collection.name +")") : "" }}</ion-title>
     <ion-buttons slot="end">
+      <ion-button (click)="onDelete()">
+        <ion-icon name="trash"></ion-icon>
+      </ion-button>
       <ion-button (click)="initActionSheet()">
         <ion-icon slot="icon-only" ios="ellipsis-horizontal" md="ellipsis-vertical"></ion-icon>
       </ion-button>
@@ -17,7 +20,7 @@
 
 <ion-content [fullscreen]="true">
   <ion-list id="coll-lines" *ngIf="collection">
-    <ion-item *ngFor="let collectionLine of collection.lines">
+    <ion-item *ngFor="let collectionLine of collection.lines" (click)="onChoice(collectionLine)">
       {{ collectionLine.customer.firstName }} {{ collectionLine.customer.name }}
       <ion-chip slot="end">
         {{ collectionLine.amount }}

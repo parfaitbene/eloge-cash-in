@@ -1,12 +1,14 @@
 import { Injectable } from '@angular/core';
 import { Plugins } from '@capacitor/core';
 import '@capacitor-community/sqlite';
-import { AlertController } from '@ionic/angular';
+import { AlertController, ModalController } from '@ionic/angular';
 import { switchMap } from 'rxjs/operators';
 import { JsonSQLite } from '@capacitor-community/sqlite';
-import { BehaviorSubject, from, of } from 'rxjs';
+import { BehaviorSubject, from, of, Subject } from 'rxjs';
 
 import { db } from '../../assets/db';
+import { Tab3Page } from '../tab3/tab3.page';
+
 
 const { CapacitorSQLite, Device, Storage } = Plugins;
 
@@ -15,17 +17,22 @@ const DB_NAME_KEY = 'db_name';
 
 var isReady:Boolean = false;
 
+
 @Injectable({
   providedIn: 'root'
 })
 export class DatabaseService {
-  private dbReady = new BehaviorSubject(false);
+  public dbReady = new BehaviorSubject(false);
   private dbName = '';
+  private isSetupDone;
+  isSetupDoneSubject = new Subject<Boolean>();
 
-  constructor(private alertCtrl: AlertController) { }
+  constructor(private alertCtrl: AlertController,public modalController: ModalController) { }
 
   getDBName() { return this.dbName; }
-  
+
+  getDBSetupKey() { return this.dbName; }
+
   async init(): Promise<Boolean> {
     const info = await Device.getInfo();
     console.log("IN APPCOMPONENT INIT",info.platform);
@@ -54,6 +61,12 @@ export class DatabaseService {
   private async setupDatabase():Promise<Boolean> {
     const dbSetupDone = await Storage.get({ key: DB_SETUP_KEY });
     console.log("IN APPCOMPONENT SETUP")
+    console.log("IN APPCOMPONENT SETUP done value",dbSetupDone.value)
+
+    this.isSetupDone = (dbSetupDone.value == null)?false:true;
+
+    this.isSetupDoneSubject.next(this.isSetupDone);
+
     if (!dbSetupDone.value) {
       console.log("IN APPCOMPONENT SETUP IF")
       this.downloadDatabase();
@@ -96,21 +109,40 @@ export class DatabaseService {
         this.dbName = db.database;
         await Storage.set({ key: DB_NAME_KEY, value: this.dbName });
         await CapacitorSQLite.importFromJson({ jsonstring });
-        await Storage.set({ key: DB_SETUP_KEY, value: '1' });
+        // await Storage.set({ key: DB_SETUP_KEY, value: '1' });
+        await CapacitorSQLite.createConnection({database:this.dbName})
+        await CapacitorSQLite.open({ database: this.dbName });
 
+        // await this.onNewConnection();
         this.dbReady.next(true);
+
+
       }
 
   }
 
+  // async onNewConnection() {
+  //   const modal = await this.modalController.create({
+  //     component: Tab3Page,
+  //     componentProps: {
+  //       'firstConnection': true
+  //     }
+  //   });
+
+  //   return await modal.present();
+  // }
+
 
 
   getCollectionList() {
+    console.log("In get collection list")
     return this.dbReady.pipe(
       switchMap(isReady => {
         if (!isReady) {
+          console.log("In get collection list if")
           return of({ values: [] });
         } else {
+          console.log("In get collection list else")
           const statement = 'SELECT * FROM collection;';
           return from(CapacitorSQLite.query({database: this.dbName, statement, values: [] }));
         }
@@ -118,5 +150,43 @@ export class DatabaseService {
     )
   }
 
+  getCustomerList() {
+    return this.dbReady.pipe(
+      switchMap(isReady => {
+        if (!isReady) {
+          return of({ values: [] });
+        } else {
+          const statement = 'SELECT * FROM customer;';
+          return from(CapacitorSQLite.query({database: this.dbName, statement, values: [] }));
+        }
+      })
+    )
+  }
+
+  getUser() {
+    return this.dbReady.pipe(
+      switchMap(isReady => {
+        if (!isReady) {
+          return of({ values: [] });
+        } else {
+          const statement = 'SELECT * FROM user;';
+          return from(CapacitorSQLite.query({database: this.dbName, statement, values: [] }));
+        }
+      })
+    )
+  }
+
+  getCollectionLineList() {
+    return this.dbReady.pipe(
+      switchMap(isReady => {
+        if (!isReady) {
+          return of({ values: [] });
+        } else {
+          const statement = 'SELECT * FROM collection_line;';
+          return from(CapacitorSQLite.query({database: this.dbName, statement, values: [] }));
+        }
+      })
+    )
+  }
 
 }

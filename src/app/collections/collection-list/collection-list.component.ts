@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { NavigationExtras } from '@angular/router';
 import { ActionSheetController, AlertController, NavController, NavParams } from '@ionic/angular';
 import { Subscription } from 'rxjs';
+import { CollectionLine } from 'src/app/models/collection-line.model';
 import { Collection } from 'src/app/models/collection.model';
 import { CollectionService } from 'src/app/services/collection.service';
 import * as XLSX from 'xlsx';
@@ -15,6 +16,7 @@ import * as XLSX from 'xlsx';
 export class CollectionListComponent implements OnInit, OnDestroy {
   collections: Collection[] = [];
   collectionsSubscription: Subscription;
+  collectionLineSubscription: Subscription;
 
   constructor(
       private collectionService: CollectionService,
@@ -25,13 +27,33 @@ export class CollectionListComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.collectionsSubscription = this.collectionService.collectionsSubject.subscribe(
-      (collections: Collection[]) => { 
-        this.collections = collections.sort(); 
+      (collections: Collection[]) => {
+        this.collections = collections.sort();
       }
     );
     this.collectionService.emitCollectionsList();
+      console.log("IN COLLECTION LIST NGONINIT*********************************");
+    this.collectionLineSubscription = this.collectionService.collectionsLinesSubject.subscribe(
+      (collectionLines: CollectionLine[]) => {
+
+        for(let collection of this.collections){
+          if(collection && collection.id){
+            let lines = [];
+
+            collectionLines.forEach(line => {
+                if(line.collection.id == collection.id) { lines.push(line); }
+            });
+
+            collection.lines = lines
+
+          }
+        }
+
+      }
+
+    );
   }
-  
+
   ionViewDidEnter() {
     this.initLiveSearch();
   }
@@ -73,21 +95,22 @@ export class CollectionListComponent implements OnInit, OnDestroy {
         {
           text: 'Annuler',
           role: 'cancel',
-        }, 
+        },
         {
           text: 'Enregistrer',
           handler: () => {
             alert.dismiss();
             alert.onDidDismiss().then(
-              (datas: any) => {
+             async (datas: any) => {
                 if(datas.data.values['name'])
-                  this.collectionService.createCollection(new Collection(datas.data.values['name']))
+                 this.collectionService.createCollection(new Collection(datas.data.values['name']))
+
             });
           }
         }
       ]
     });
-  
+
     await alert.present();
   }
 
@@ -116,7 +139,7 @@ export class CollectionListComponent implements OnInit, OnDestroy {
               {
                 text: 'Non',
                 role: 'cancel',
-              }, 
+              },
               {
                 text: 'Oui',
                 handler: () => {
@@ -127,14 +150,14 @@ export class CollectionListComponent implements OnInit, OnDestroy {
           });
           await alert.present();
         }
-      }, 
+      },
       // {
       //   text: 'Exporter',
       //   icon: 'cloud-download',
       //   handler: () => {
       //     this.onExport()
       //   }
-      // }, 
+      // },
       {
         text: 'Cancel',
         icon: 'close',

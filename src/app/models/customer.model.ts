@@ -6,9 +6,11 @@ export class Customer {
     phone: string;
     accountNumber: string;
 
-    constructor(firstName: string, name: string, accountNumber: string) {
+    constructor(firstName: string, name: string, accountNumber: string, phone: string, email: string) {
         this.firstName = firstName;
         this.name = name;
         this.accountNumber = accountNumber;
+        this.phone=phone;
+        this.email=email;
     }
 }

@@ -5,7 +5,12 @@
         <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
       </ion-button>
     </ion-buttons>
-    <ion-title>Création client</ion-title>
+    <ion-title>{{isUpdate?"Modification client":"Création client"}}</ion-title>
+    <ion-buttons slot="end" *ngIf="isUpdate">
+      <ion-button (click)="onDelete()">
+        <ion-icon name="trash"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 

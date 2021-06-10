@@ -31,8 +31,8 @@ export class CustomerListComponent implements OnInit, OnDestroy {
 
   async ngOnInit() {
     this.customersSubscription = this.customerService.customersSubject.subscribe(
-      (customers: Customer[]) => { 
-        this.customers = customers.sort(); 
+      (customers: Customer[]) => {
+        this.customers = customers.sort();
       }
     );
     this.customerService.emitCustomersList();
@@ -62,11 +62,21 @@ export class CustomerListComponent implements OnInit, OnDestroy {
           'customer': this.choice
         }
       });
-      
+
       return await modal.present();
     }
     else {
-      //afficher les détails
+
+      let options = {
+        component: CustomerCreateComponent,
+        componentProps: {
+          'customerInfo': this.choice,
+          'isUpdate': true
+        }
+      };
+
+      this.modalService.presentModal(options);
+
     }
 
   }
@@ -104,7 +114,8 @@ export class CustomerListComponent implements OnInit, OnDestroy {
         role: 'destructive',
         icon: 'trash',
         handler: () => {
-          this.customerService.setCustomers([]);
+          // this.customerService.setCustomers([]);
+          this.customerService.deleteCustomers();
         }
       }, {
 

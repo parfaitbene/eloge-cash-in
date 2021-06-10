@@ -10,8 +10,13 @@ import { CustomerListComponent } from '../customers/customer-list/customer-list.
 import { CollectionLineListPage } from '../collections/collection-line-list/collection-line-list.page';
 import { CollectionListComponent } from '../collections/collection-list/collection-list.component';
 import { CustomerCreateComponent } from '../customers/customer-create/customer-create.component';
+import { CollectionService } from '../services/collection.service';
+import { Tab3Page } from '../tab3/tab3.page';
 
 @NgModule({
+  providers:[
+    CollectionService
+  ],
   imports: [
     IonicModule,
     CommonModule,
@@ -24,7 +29,15 @@ import { CustomerCreateComponent } from '../customers/customer-create/customer-c
     CollectionListComponent,
     CollectionLineListPage,
     CustomerListComponent,
-    CustomerCreateComponent
+    CustomerCreateComponent,
+    Tab3Page
+  ],
+  exports:[
+    Tab3Page
   ]
 })
-export class TabsPageModule {}
+export class TabsPageModule {
+  constructor(){
+    console.log("IN TABS MODULE");
+  }
+}

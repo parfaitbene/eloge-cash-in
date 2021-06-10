@@ -4,10 +4,10 @@ import { CollectionLine } from './collection-line.model';
 export class Collection {
     id: string;
     name: string;
-    date: Date;
+    date: String;
     lines: CollectionLine[] = [];
 
-    constructor(name: string, lines: CollectionLine[] = [], date: Date = new Date()){
+    constructor(name: string, lines: CollectionLine[] = [], date: string = new Date().toLocaleDateString()){
         this.name = name;
         this.lines = lines;
         this.date = date;
@@ -15,7 +15,9 @@ export class Collection {
 
     create() {
         this.id = uuidv4();
-        this.date = new Date();
+        let date:Date = new Date();
+        this.date= date.toLocaleDateString();
+        // this.date = new Date();
 
         return this;
     }

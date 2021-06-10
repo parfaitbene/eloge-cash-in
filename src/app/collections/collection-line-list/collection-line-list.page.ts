@@ -1,4 +1,4 @@
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ActionSheetController, AlertController, ModalController, NavController, NavParams } from '@ionic/angular';
 import { Subject, Subscription } from 'rxjs';
@@ -6,7 +6,10 @@ import { CustomerListComponent } from 'src/app/customers/customer-list/customer-
 import { CollectionLine } from 'src/app/models/collection-line.model';
 import { Collection } from 'src/app/models/collection.model';
 import { CollectionService } from 'src/app/services/collection.service';
+import { CustomerService } from 'src/app/services/customer.service';
+import { ModalService } from 'src/app/services/modal-service';
 import * as XLSX from 'xlsx';
+import { CollectionLineCreateComponent } from '../collection-line-create/collection-line-create.component';
 
 @Component({
   selector: 'app-collection-line-list',
@@ -20,6 +23,8 @@ export class CollectionLineListPage implements OnDestroy{
   // collectionsLines: CollectionLine[] = [];
   collectionSubject = new Subject<Collection>();
   collectionSubscription: Subscription;
+  collectionLineSubscription: Subscription;
+  choice:CollectionLine;
 
   constructor(
       private collectionService: CollectionService,
@@ -28,20 +33,54 @@ export class CollectionLineListPage implements OnDestroy{
       private route: ActivatedRoute,
       public modalController: ModalController,
       public navController: NavController,
-      public alertController: AlertController
-    ) {}
+      public alertController: AlertController,
+      public modalService: ModalService,
+      private customerService: CustomerService
+    ) {
+
+    }
+
+    // ngOnInit() {
+    //   this.collectionLineSubscription = this.collectionService.collectionsLinesSubject.subscribe(
+    //     (collectionLines: CollectionLine[]) => {
+    //       this.collections = collections.sort();
+    //     }
+    //   );
+    //   this.collectionService.emitCollectionsList();
+    // }
 
   ionViewWillEnter() {
     this.route.queryParams.subscribe(params => {
       this.collection = this.collectionService.getCollectionById(params['collection_id']);
 
       if(this.collection){
-        this.collectionService.getCollectionLines(this.collection).then(
-          (lines: CollectionLine[]) => {
-            // this.collection.lines = lines;
-            this.collection.lines = lines;
+
+        this.collectionLineSubscription = this.collectionService.collectionsLinesSubject.subscribe(
+              (collectionLines: CollectionLine[]) => {
+                if(this.collection && this.collection.id){
+                  let lines = [];
+
+                  collectionLines.forEach(line => {
+                      if(line.collection.id == this.collection.id) { lines.push(line); }
+                  });
+
+                  this.collection.lines = lines
+
+                }
+
+
+              }
+
+
+            );
+
+        // this.collectionService.getCollectionLines(this.collection).then(
+        //   (lines: CollectionLine[]) => {
+        //     console.log("IN GET COLLECTION LINE THEN")
+        //     // this.collection.lines = lines;
+        //     this.collection.lines = lines;
             this.collectionSubject.next(this.collection);
-          });
+          //});
       }
       else{
         this.navController.navigateForward(['/tabs', 'collections']);
@@ -54,8 +93,28 @@ export class CollectionLineListPage implements OnDestroy{
       (collection: Collection) => { this.collection = collection; }
     );
     this.collectionSubject.next(this.collection);
-    
+
     this.initLiveSearch();
+  }
+
+  async onChoice(collectionLine: CollectionLine) {
+    this.choice = collectionLine;
+
+      let customer=this.customerService.getCustomerById(collectionLine.customer.id);
+
+      let options = {
+        component: CollectionLineCreateComponent,
+        componentProps: {
+          'customer':customer,
+          'collectionLineInfo': this.choice,
+          'collection':this.collection,
+          'isUpdate': true
+        }
+      };
+
+      this.modalService.presentModal(options);
+
+
   }
 
   initLiveSearch(){
@@ -127,7 +186,7 @@ export class CollectionLineListPage implements OnDestroy{
         handler: () => {
           this.onExport()
         }
-      }, 
+      },
       {
         text: 'Vider',
         role: 'destructive',
@@ -140,22 +199,23 @@ export class CollectionLineListPage implements OnDestroy{
               {
                 text: 'Non',
                 role: 'cancel',
-              }, 
+              },
               {
                 text: 'Oui',
                 handler: async () => {
-                  await this.collectionService.deleteCollectionLines(this.collection).then(
-                    (c: Collection) => { 
-                      this.collectionSubject.next(c);
-                    }
-                  );
+                  this.collectionService.deleteAllCollectionsLines(this.collection);
+                  // await this.collectionService.deleteCollectionLines(this.collection).then(
+                  //   (c: Collection) => {
+                  //     this.collectionSubject.next(c);
+                  //   }
+                  // );
                 }
               }
             ]
           });
           await alert.present();
         }
-      }, 
+      },
       {
         text: 'Cancel',
         icon: 'close',
@@ -165,7 +225,13 @@ export class CollectionLineListPage implements OnDestroy{
     await actionSheet.present();
   }
 
+  onDelete(){
+    this.collectionService.deleteCollection(this.collection);
+    this.navController.navigateForward(['/tabs', 'collections']);
+  }
+
   ngOnDestroy() {
     this.collectionSubscription.unsubscribe();
+    this.collectionLineSubscription.unsubscribe();
   }
 }

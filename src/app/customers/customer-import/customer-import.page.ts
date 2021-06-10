@@ -21,8 +21,8 @@ export class CustomerImportPage implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.customersSubscription = this.customerService.customersSubject.subscribe(
-      (customers: Customer[]) => { 
-        this.customers = customers.sort(); 
+      (customers: Customer[]) => {
+        this.customers = customers.sort();
       }
     );
     this.customerService.emitCustomersList();
@@ -58,10 +58,10 @@ export class CustomerImportPage implements OnInit, OnDestroy {
 
   parseDatas(datas: any[]) {
     datas.forEach(row => {
-      let customer = new Customer(row.prenom, row.nom, row.matricule);
+      let customer = new Customer(row.prenom, row.nom, row.matricule, row.phone, row.email);
       customer.phone = row.phone;
       customer.email = row.email;
-      
+
       this.customerService.updateOrCreate(customer);
     });
 
@@ -72,7 +72,7 @@ export class CustomerImportPage implements OnInit, OnDestroy {
     this.customerService.setCustomers(this.customers);
     this.navCtrl.navigateRoot('/tabs/clients');
   }
-  
+
   ngOnDestroy() {
     this.customersSubscription.unsubscribe();
   }

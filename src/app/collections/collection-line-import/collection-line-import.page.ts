@@ -26,7 +26,7 @@ export class CollectionLineImportPage implements OnInit {
   count: number = 0;
 
   constructor(
-    private collectionService: CollectionService, 
+    private collectionService: CollectionService,
     private customerService: CustomerService,
     public navParams: NavParams,
     private navCtrl: NavController,
@@ -34,15 +34,15 @@ export class CollectionLineImportPage implements OnInit {
 
   ngOnInit() {
     this.customersSubscription = this.customerService.customersSubject.subscribe(
-      (customers: Customer[]) => { 
-        this.customers = customers.sort(); 
+      (customers: Customer[]) => {
+        this.customers = customers.sort();
       }
     );
     this.customerService.emitCustomersList();
 
     this.collectionsSubscription = this.collectionService.collectionsSubject.subscribe(
-      (collections: Collection[]) => { 
-        this.collections = collections.sort(); 
+      (collections: Collection[]) => {
+        this.collections = collections.sort();
       }
     );
     this.collectionService.emitCollectionsList();
@@ -78,7 +78,7 @@ export class CollectionLineImportPage implements OnInit {
       /* save data */
       let datas: any[] = (XLSX.utils.sheet_to_json(ws));
       this.count = datas.length;
-      
+
       this.parseDatas(datas)
     };
     reader.readAsBinaryString(target.files[0]);
@@ -111,7 +111,7 @@ export class CollectionLineImportPage implements OnInit {
     let customers: Customer[] = [];
 
     datas.forEach(row => {
-      let customer: Customer = new Customer(row.prenom, row.nom, row.compte);
+      let customer: Customer = new Customer(row.prenom, row.nom, row.compte, row.phone, row.email);
       customers.push(customer);
     });
 
